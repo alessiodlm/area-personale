@@ -1,0 +1,199 @@
+
+<!DOCTYPE html>
+
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<title>Area Personale di Ricarica</title>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: "Segoe UI", Roboto, sans-serif;
+    background-color: #f7f9fc;
+    color: #333;
+    margin: 0;
+    padding: 20px;
+  }
+
+  h1 {
+    text-align: center;
+    color: #2c3e50;
+  }
+
+  h2 {
+    margin-bottom: 10px;
+    color: #2c3e50;
+  }
+
+  .box {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 600px;
+  }
+
+  input[type="text"],
+  input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+
+  button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+  }
+
+  button:hover {
+    background-color: #2980b9;
+  }
+
+  pre {
+    background-color: #f4f4f4;
+    padding: 15px;
+    border-radius: 6px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  table {
+    border-collapse: collapse;
+    margin: 0 auto;
+    width: 90%;
+    background-color: white;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  }
+
+  table th, table td {
+    padding: 10px;
+    border: 1px solid #ccc;
+    text-align: center;
+  }
+
+  form {
+    margin-top: 20px;
+  }
+
+  .box label {
+    font-weight: bold;
+  }
+</style>
+
+</head>
+<body>
+<h3> Utenti di test</h3>
+<div style="display: flex; justify-content: center; margin-bottom: 20px;"><table border="1" style="margin-bottom: 20px;">
+<thead>
+<tr><th>Nome</th><th>userId (MongoDB)</th></tr>
+</thead>
+<tbody>
+<tr><td>Alice</td><td>66598c3d491e314410477ba1</td></tr>
+<tr><td>Bob</td><td>66598c3d491e314410477ba2</td></tr>
+<tr><td>Carla</td><td>66598c3d491e314410477ba3</td></tr>
+<tr><td>Davide</td><td>66598c3d491e314410477ba4</td></tr>
+<tr><td>Elena</td><td>66598c3d491e314410477ba5</td></tr>
+</tbody>
+</table></div>
+<h1>  Area Personale - Servizio Ricarica</h1>
+<div class="box">
+<h2> Effettua Ricarica</h2>
+<input id="userId" placeholder="Inserisci ID utente" type="text"/><br/>
+<input id="importo" placeholder="Inserisci importo" type="number"/><br/>
+<input id="operatore" placeholder="Operatore (es. Iliad)" type="text"/><br/>
+<button onclick="effettuaRicarica()">Invia Ricarica</button>
+<div id="risultatoRicarica"></div>
+</div>
+<div class="box">
+<h2> Calcola Saldo</h2>
+<input id="userIdSaldo" placeholder="ID utente" type="text"/><br/>
+<button onclick="getSaldo()">Visualizza Saldo</button>
+<div id="risultatoSaldo"></div>
+</div>
+<div class="box">
+<h2> Storico Ricariche</h2>
+<input id="userIdStorico" placeholder="ID utente" type="text"/><br/>
+<button onclick="getStorico()">Mostra Storico</button>
+<pre id="storicoOutput"></pre>
+</div>
+<div class="box">
+<h2> Notifiche</h2>
+<input id="userIdNotifiche" placeholder="ID utente" type="text"/><br/>
+<button onclick="getNotifiche()">Mostra Notifiche</button>
+<pre id="notificheOutput"></pre>
+</div>
+<script>
+const baseUrl = "http://localhost:8080";
+
+async function effettuaRicarica() {
+  const userId = document.getElementById("userId").value;
+  const body = {
+    importo: parseFloat(document.getElementById("importo").value),
+    operatore: document.getElementById("operatore").value
+  };
+
+  const res = await fetch(`${baseUrl}/utenti/${userId}/ricarica`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+
+  const json = await res.json();
+  document.getElementById("risultatoRicarica").innerText = JSON.stringify(json, null, 2);
+}
+
+async function getSaldo() {
+  const userId = document.getElementById("userIdSaldo").value;
+  const res = await fetch(`${baseUrl}/utenti/${userId}/saldo`);
+  const text = await res.text();
+  document.getElementById("risultatoSaldo").innerText = "Saldo: € " + text;
+}
+
+async function getStorico() {
+  const userId = document.getElementById("userIdStorico").value;
+  const res = await fetch(`${baseUrl}/utenti/${userId}/storico`);
+  const json = await res.json();
+  document.getElementById("storicoOutput").innerText = JSON.stringify(json, null, 2);
+}
+
+async function getNotifiche() {
+  const userId = document.getElementById("userIdNotifiche").value;
+  const res = await fetch(`${baseUrl}/utenti/${userId}/notifiche`);
+  const json = await res.json();
+  document.getElementById("notificheOutput").innerText = JSON.stringify(json, null, 2);
+}
+
+function getLog(e) {
+  e.preventDefault();
+  const userId = document.getElementById('logUserId').value;
+  fetch(`${baseUrl}/api/logs/${userId}`)
+    .then(res => res.json())
+    .then(data => document.getElementById('logResult').textContent = JSON.stringify(data, null, 2))
+    .catch(err => alert('Errore nel recupero log: ' + err));
+}
+</script>
+
+</script>
+
+<h3> Visualizza Log Utente</h3>
+<form onsubmit="getLog(event)">
+<label for="logUserId">User ID:</label>
+<input id="logUserId" required="" type="text"/>
+<button type="submit">Mostra Log</button>
+</form>
+<pre id="logResult" style="background:#f0f0f0;padding:10px;"></pre>
+</body>
+</html>
