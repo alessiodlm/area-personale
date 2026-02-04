@@ -3,7 +3,6 @@ package it.unimol.area_personale.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
@@ -12,6 +11,7 @@ import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 
+import it.unimol.area_personale.dto.SaldoAgg;
 import it.unimol.area_personale.model.EventoRicarica;
 import it.unimol.area_personale.model.LogEvento;
 import it.unimol.area_personale.model.Notifica;
@@ -19,6 +19,7 @@ import it.unimol.area_personale.repository.EventoRicaricaRepository;
 import it.unimol.area_personale.repository.LogEventoRepository;
 import it.unimol.area_personale.repository.NotificaRepository;
 import lombok.RequiredArgsConstructor;
+
 
 @Service
 @RequiredArgsConstructor
@@ -78,11 +79,11 @@ public EventoRicarica registraEvento(EventoRicarica evento) {
                 .sum("importo").as("saldo");
 
         Aggregation aggregation = Aggregation.newAggregation(match, group);
-        AggregationResults<Document> result = mongoTemplate.aggregate(
-                aggregation, "eventi_ricarica", Document.class
+        AggregationResults<SaldoAgg> result = mongoTemplate.aggregate(
+                aggregation, "eventi_ricarica", SaldoAgg.class
         );
 
-        Document doc = result.getUniqueMappedResult();
-        return (doc != null) ? doc.getDouble("saldo") : 0.0;
+        SaldoAgg mapped = result.getUniqueMappedResult();
+        return (mapped != null && mapped.getSaldo() != null) ? mapped.getSaldo() : 0.0;
     }
 }
