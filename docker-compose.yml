@@ -1,33 +1,30 @@
+version: "3.8"
+
 services:
   mongo:
     image: mongo:7
-    restart: unless-stopped
-    ports:
-      - "27017:27017"          # opzionale ma utile (Mongo Compass da host)
     volumes:
       - mongo_data:/data/db
-    healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "mongodb://localhost:27017/admin", "--eval", "db.runCommand({ ping: 1 }).ok"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+    networks:
+      - backend
+    restart: unless-stopped
 
   area-personale:
     build:
       context: .
       dockerfile: Dockerfile
     image: area-personale:1.0
-    restart: unless-stopped
-    depends_on:
-      mongo:
-        condition: service_healthy
+    networks:
+      - backend
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATA_MONGODB_HOST: mongo
-      SPRING_DATA_MONGODB_PORT: 27017
-      SPRING_DATA_MONGODB_DATABASE: ricaricheDB
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/ricaricheDB
       SPRING_DATA_MONGODB_AUTO_INDEX_CREATION: "true"
+    restart: unless-stopped
+
+networks:
+  backend:
 
 volumes:
   mongo_data:
